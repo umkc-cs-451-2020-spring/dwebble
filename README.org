@@ -1,0 +1,21 @@
+* cs451r capstone project
+
+** about
+
+   - group 12
+
+   - members
+     + Elias Julian Marko Garcia
+     + Blake Higgins
+     + Aidan Cornstubble
+     + Ibrahim Saleh Abuanz
+
+*** problem
+
+    alternative assignment: UMKC CS Dept Professor Class Scheduler
+
+** TODO project summary
+
+** TODO project setup
+
+** TODO contributing
