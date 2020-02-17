@@ -1,3 +1,12 @@
+---
+name: Feature
+about: Create a feature issue for tracking
+title: "[Feature]"
+labels: ''
+assignees: ''
+
+---
+
 <!-- New feature proposal template. Taken from: https://github.com/opensecuritycontroller/community/blob/master/new-features/new-feature-template.md -->
 
 # <!-- FEATURE NAME HERE -->
@@ -19,7 +28,7 @@ In order for the front-end to both *initiate* and communicate *back* to the rust
 
   - [ ] `Board`
   - [ ] `GameState`
-  
+
 -->
 
 
@@ -45,4 +54,3 @@ In order for the front-end to both *initiate* and communicate *back* to the rust
 
 ## References
 <!-- List any relevant references for feature implementation, i.e. Library documentation, example code, technical resources that influence a design choice, etc -->
-
