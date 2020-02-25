@@ -6,16 +6,55 @@
 
    - members
      + Elias Julian Marko Garcia
-     + Blake Higgins
      + Aidan Cornstubble
      + Ibrahim Saleh Abuanz
 
 *** problem
 
-    alternative assignment: UMKC CS Dept Professor Class Scheduler
+    the UMKC CSEE department needs help automating the scheduling of professors and courses that
+    need teaching for a given semester given the constraints of professorial staff, conflicts
+    between sequencing and order that classes should be taught, and other minutia involved with
+    class scheduling.
+
+    the full project prompt can be found [[file:docs/alternative_capstone_project_prompt.docx][here]].
+
+*** documentation
+
+    you can find documents related to the project, such as our charter or sprint effort estimates,
+    under [[file:docs/][docs/]].
 
 ** TODO project summary
 
-** TODO project setup
+*** =dwebble=
+
+    [[https://assets.pokemon.com/assets/cms2/img/pokedex/detail/557.png]]
+
+    =dwebble= is a Rust based application that uses the [[https://rocket.rs/][Rocket]] web framework. It is still under heavy
+    development and is liable to massive changes!
+
+** project setup
+
+*** install rust
+
+    preferably, using [[https://rustup.rs/][rustup]]. if you are running an unix like environment, the following cli command
+    will get you started:
+    #+BEGIN_SRC sh
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+    #+END_SRC
+
+    for 64bit windows, download the installer [[https://win.rustup.rs/x86_64][here]].
+
+*** running the project
+
+    after installing rust, simply run:
+
+    #+BEGIN_SRC sh
+    cd dwebble/
+    cargo run --release
+    #+END_SRC
+
+    the application will be running and waiting for you at [[http://localhost:8000/]].
+
 
 ** TODO contributing
+   TBD
