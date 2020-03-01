@@ -7,7 +7,7 @@
         {% endif %}
     </head>
     <body>
-        <div>Hermitblog:
+        <div>Dwebble:
             <a href="/">Home</a>
             <a href="/login">Login</a>
         </div>

@@ -24,12 +24,22 @@ struct LoginForm {
     input: String,
 }
 
-struct LoginContext {}
+#[derive(Serialize)]
+struct LoginContext {
+    flash: String,
+    error: bool,
+}
 
 /// A very basic Template Context
 #[derive(Serialize)]
 struct HelloContext {
     name: String,
+}
+
+#[derive(Serialize)]
+struct IndexContext {
+    name: String,
+    staff_schedules: Vec<String>,
 }
 
 /// Route that demonstrates using a basic Tera Template + dynamic segment data.
@@ -50,7 +60,13 @@ fn login(
     mut cookies: Cookies,
     state: State<DwebbleConfig>,
 ) -> Template {
-    unimplemented!()
+    Template::render(
+        "login",
+        &LoginContext {
+            flash: "".to_string(),
+            error: false,
+        },
+    )
 }
 
 /// POST login form data, attempt at login attempt.
@@ -78,10 +94,18 @@ fn get_schedules() -> String {
 
 #[get("/")]
 fn index() -> Template {
+    let staff = vec![
+        "hare".to_string(),
+        "bingham".to_string(),
+        "mitchell".to_string(),
+        "xu".to_string(),
+    ];
+
     Template::render(
         "index",
-        &HelloContext {
+        &IndexContext {
             name: String::from("Anonymous User"),
+            staff_schedules: staff,
         },
     )
 }
@@ -99,8 +123,11 @@ fn main() {
         get_schedules
     ];
 
+    let cfg = RwLock::new(AppConfig {});
+
     rocket::ignite()
         .attach(Template::fairing())
         .mount("/", app_routes)
+        .manage(cfg)
         .launch();
 }

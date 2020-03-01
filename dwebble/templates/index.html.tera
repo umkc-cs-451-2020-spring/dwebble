@@ -2,4 +2,15 @@
 
 {% block content %}
     <h1>hello, {{ name }}!</h1>
+
+    {%- if staff_schedules -%}
+        <h2>staff schedules</h2>
+        <div>
+            <ul>
+                {%- for staff in staff_schedules -%}
+                    <li>{{ staff }}</li>
+                {%- endfor -%}
+            </ul>
+        </div>
+    {%- endif -%}
 {% endblock content %}
