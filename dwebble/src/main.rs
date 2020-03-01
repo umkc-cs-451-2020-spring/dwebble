@@ -3,8 +3,28 @@
 #[macro_use] extern crate rocket_contrib;
 #[macro_use] extern crate serde_derive;
 
+use rocket::http::Cookies;
 use rocket::http::RawStr;
+use rocket::request::FlashMessage;
+use rocket::request::FromForm;
+use rocket::request::LenientForm;
+use rocket::response::Flash;
+use rocket::response::Redirect;
+use rocket::State;
 use rocket_contrib::templates::Template;
+
+use std::sync::RwLock;
+
+struct AppConfig {}
+
+type DwebbleConfig = RwLock<AppConfig>;
+
+#[derive(FromForm)]
+struct LoginForm {
+    input: String,
+}
+
+struct LoginContext {}
 
 /// A very basic Template Context
 #[derive(Serialize)]
@@ -12,23 +32,9 @@ struct HelloContext {
     name: String,
 }
 
-/// Basic `GET` route on `/` that returns the text "Hello, World!".
-#[get("/")]
-fn index() -> String {
-    String::from("Hello, World!")
-}
-
-/// Route that contains a dynamic segment, `<name`, which is which is handled by a parameter guard.
-/// This allows us to take the value provided in the segment and interact with it as if it were
-/// a formal parameter passed to our handle function.
-#[get("/<name>")]
-fn index_name(name: &RawStr) -> String {
-    format!("Hello, {}!", name.as_str())
-}
-
 /// Route that demonstrates using a basic Tera Template + dynamic segment data.
-#[get("/pretty/<name>")]
-fn pretty_hello_name(name: &RawStr) -> Template {
+#[get("/<name>")]
+fn index_name(name: &RawStr) -> Template {
     Template::render(
         "index",
         &HelloContext {
@@ -37,11 +43,41 @@ fn pretty_hello_name(name: &RawStr) -> Template {
     )
 }
 
-/// Route that demonstrates using a basic Tera template via the rocket_contrib crate.
-/// To render a template, we have to provide it a context, which we defined above, which will
-/// carry important data like possible variables expected by the template and so forth.
-#[get("/pretty")]
-fn pretty_hello() -> Template {
+/// GET the login page, with login form to fill out and submit
+#[get("/login")]
+fn login(
+    flash: Option<FlashMessage>,
+    mut cookies: Cookies,
+    state: State<DwebbleConfig>,
+) -> Template {
+    unimplemented!()
+}
+
+/// POST login form data, attempt at login attempt.
+#[post("/login", data = "<login>")]
+fn login_submit(
+    state: State<DwebbleConfig>,
+    login: LenientForm<LoginForm>,
+    mut cookies: Cookies,
+) -> Result<Flash<Redirect>, Flash<Redirect>> {
+    unimplemented!()
+}
+
+/// POST department schedule data for dwebble to save.
+#[post("/submit")]
+fn submit() -> Template {
+    unimplemented!()
+}
+
+/// GET the current list of faculty for which there is data entered with respect to schedules
+/// Return type is completely undetermined at this point, setting to String by default.
+#[get("/schedule_data")]
+fn get_schedules() -> String {
+    unimplemented!()
+}
+
+#[get("/")]
+fn index() -> Template {
     Template::render(
         "index",
         &HelloContext {
@@ -54,7 +90,14 @@ fn pretty_hello() -> Template {
 /// the mounting route given to it.
 fn main() {
     // routes! is a macro that will collect and return every handle name given to it.
-    let app_routes = routes![index, index_name, pretty_hello, pretty_hello_name];
+    let app_routes = routes![
+        index,
+        index_name,
+        submit,
+        login,
+        login_submit,
+        get_schedules
+    ];
 
     rocket::ignite()
         .attach(Template::fairing())
