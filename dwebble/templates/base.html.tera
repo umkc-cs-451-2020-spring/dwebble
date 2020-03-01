@@ -1,0 +1,18 @@
+<html>
+    <head>
+        {% if title %}
+            <title>{{ title }} - Dwebble</title>
+        {% else %}
+            <title>Dwebble Class Scheduler</title>
+        {% endif %}
+    </head>
+    <body>
+        <div>Hermitblog:
+            <a href="/">Home</a>
+            <a href="/login">Login</a>
+        </div>
+        <hr>
+        {% block content %}
+        {% endblock content %}
+    </body>
+</html>
