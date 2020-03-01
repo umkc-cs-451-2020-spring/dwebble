@@ -6,7 +6,6 @@
 use rocket::http::Cookies;
 use rocket::http::RawStr;
 use rocket::request::FlashMessage;
-use rocket::request::Form;
 use rocket::request::FromForm;
 use rocket::request::LenientForm;
 use rocket::response::Flash;
@@ -44,6 +43,7 @@ fn index_name(name: &RawStr) -> Template {
     )
 }
 
+/// GET the login page, with login form to fill out and submit
 #[get("/login")]
 fn login(
     flash: Option<FlashMessage>,
@@ -53,6 +53,7 @@ fn login(
     unimplemented!()
 }
 
+/// POST login form data, attempt at login attempt.
 #[post("/login", data = "<login>")]
 fn login_submit(
     state: State<DwebbleConfig>,
@@ -65,6 +66,13 @@ fn login_submit(
 /// POST department schedule data for dwebble to save.
 #[post("/submit")]
 fn submit() -> Template {
+    unimplemented!()
+}
+
+/// GET the current list of faculty for which there is data entered with respect to schedules
+/// Return type is completely undetermined at this point, setting to String by default.
+#[get("/schedule_data")]
+fn get_schedules() -> String {
     unimplemented!()
 }
 
@@ -82,7 +90,14 @@ fn index() -> Template {
 /// the mounting route given to it.
 fn main() {
     // routes! is a macro that will collect and return every handle name given to it.
-    let app_routes = routes![index, index_name, submit, login, login_submit,];
+    let app_routes = routes![
+        index,
+        index_name,
+        submit,
+        login,
+        login_submit,
+        get_schedules
+    ];
 
     rocket::ignite()
         .attach(Template::fairing())
