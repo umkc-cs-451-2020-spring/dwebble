@@ -17,7 +17,7 @@ limits = { forms = 32768 }
 
 
 [global.databases]
-# dev = { url = "" }
+dwebble_dev = { url = "postgres://postgres:dwebbleapp@localhost:5430" }
 
 # put this in .env for path equiv:
-# ROCKET_DATABASES='{hermit_dev={url=""}}'
+# ROCKET_DATABASES='{dwebble_dev={url=""}}'

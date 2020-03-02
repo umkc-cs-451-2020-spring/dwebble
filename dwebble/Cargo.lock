@@ -294,6 +294,7 @@ dependencies = [
  "chrono",
  "csrf",
  "data-encoding",
+ "diesel",
  "lazy_static",
  "regex",
  "ring",
