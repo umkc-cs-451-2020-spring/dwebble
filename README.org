@@ -33,7 +33,6 @@
     development and is liable to massive changes!
 
 ** project setup
-
 *** install rust
 
     preferably, using [[https://rustup.rs/][rustup]]. if you are running an unix like environment, the following cli command
@@ -44,17 +43,32 @@
 
     for 64bit windows, download the installer [[https://win.rustup.rs/x86_64][here]].
 
+*** install docker
+    Follow the [[https://docs.docker.com/install/][directions on Docker's website]] to get Docker on your system.
+*** install PostgreSQL
+    While our database environment and development is isolated to a docker image, you will probably
+    need to [[https://www.postgresql.org/download/][install PostgreSQL on your system]] to develop anything on the application.
+
+    While the link above is directly to PostgreSQL's download page, for those on an unix like
+    environment, you can probably *more easily obtain* PostgreSQL via your system's package manager,
+    e.g. Ubuntu's =apt= or macOS' =homebrew=.
 *** running the project
 
-    after installing rust, simply run:
+    after installing rust and the other dependencies, open a terminal and enter the root of the
+    project. Run the following to spin up the docker container:
+
+    #+BEGIN_SRC sh
+      docker-compose up
+    #+END_SRC
+
+    Then, in another shell, run the following to launch the application itself:
 
     #+BEGIN_SRC sh
     cd dwebble/
     cargo run --release
     #+END_SRC
 
-    the application will be running and waiting for you at [[http://localhost:8000/]].
-
+    =dwebble= will be running and waiting for you at [[http://localhost:8000/]].
 
 ** TODO contributing
    TBD
