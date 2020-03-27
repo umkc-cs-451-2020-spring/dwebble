@@ -17,6 +17,7 @@ use rocket_contrib::templates::Template;
 use std::sync::RwLock;
 
 pub mod models;
+pub mod scheduler;
 pub mod schema;
 
 #[database("dwebble_dev")]
