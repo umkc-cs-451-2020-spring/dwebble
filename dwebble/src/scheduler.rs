@@ -1,6 +1,6 @@
 use chrono;
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 enum DayE {
     Monday,
     Tuesday,
@@ -11,7 +11,7 @@ enum DayE {
     Sunday,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 struct TimeDateE(DayE, TimeRange);
 
 #[derive(Debug)]
@@ -48,7 +48,7 @@ enum Cause {
 
 type TimeRange = (chrono::NaiveTime, chrono::Duration);
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 enum ScheduleException {
     Day(DayE),
     Time(TimeRange),
@@ -72,7 +72,7 @@ enum ScheduleCondition {
 #[derive(Debug)]
 struct InstructorSchedule {
     instructor: Instructor,
-    exceptions: Vec<(ScheduleException, Range)>,
+    exceptions: Vec<(ScheduleException, Option<Range>)>,
     conditions: Vec<ScheduleCondition>,
     classes: Vec<Class>,
 }
@@ -141,6 +141,65 @@ type TRNightSlots = [Option<[Option<Slot>; 3]>; 4];
 type MWNightSlots = [Option<[Option<Slot>; 3]>; 4];
 type SingleSlots = [Option<Slot>; 7];
 
+struct Scheduler {
+    most_popular_days: [u32; 7],
+    i_schedules: Vec<InstructorSchedule>,
+}
+
+impl Scheduler {
+    fn new(schedules: Vec<InstructorSchedule>) -> Self {
+        let mut days: [u32; 7] = Default::default();
+
+        Scheduler {
+            most_popular_days: days,
+            i_schedules: schedules,
+        }
+    }
+    fn resolve(mut self) {
+        unimplemented!()
+    }
+    fn find_most_popular_day(&mut self) {
+        let mut day = 0;
+        let mut incl = false;
+        for (i, inst_sched) in (&self.i_schedules).iter().enumerate() {
+            for (e, r) in &inst_sched.exceptions {
+                if let Some(_r) = r {
+                    match _r {
+                        Range::Inclusive => incl = true,
+                        _ => incl = false,
+                    }
+                };
+                match e {
+                    ScheduleException::Day(e) => {
+                        if incl {
+                            self.most_popular_days = get_day_uint(*e, self.most_popular_days);
+                        }
+                    }
+                    ScheduleException::TimeDate(e) => {
+                        if incl {
+                            self.most_popular_days = get_day_uint(e.0, self.most_popular_days);
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+}
+
+fn get_day_uint(day: DayE, mut pop_days: [u32; 7]) -> [u32; 7] {
+    match day {
+        DayE::Monday => pop_days[0] += 1,
+        DayE::Tuesday => pop_days[1] += 1,
+        DayE::Wednesday => pop_days[2] += 1,
+        DayE::Thursday => pop_days[3] += 1,
+        DayE::Friday => pop_days[4] += 1,
+        DayE::Saturday => pop_days[5] += 1,
+        DayE::Sunday => pop_days[6] += 1,
+    }
+    pop_days
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -176,7 +235,7 @@ mod tests {
                         chrono::Duration::hours(5),
                     ),
                 )),
-                Range::Inclusive,
+                Some(Range::Inclusive),
             ),
             (
                 ScheduleException::TimeDate(TimeDateE(
@@ -186,7 +245,7 @@ mod tests {
                         chrono::Duration::hours(5),
                     ),
                 )),
-                Range::Inclusive,
+                Some(Range::Inclusive),
             ),
         ];
         let mut brown_conds = vec![ScheduleCondition::Overlap(prof_purple.clone())];
@@ -223,7 +282,7 @@ mod tests {
                 chrono::NaiveTime::from_hms(10, 0, 0),
                 chrono::Duration::hours(4),
             )),
-            Range::Inclusive,
+            Some(Range::Inclusive),
         )];
         let mut blue_conds = vec![ScheduleCondition::Overlap(prof_green.clone())];
         let mut blue_classes = vec![
@@ -290,5 +349,24 @@ mod tests {
     fn test() {
         let v: MWFDaySlots = Default::default();
         println!("MWFDaySlots default: {:?}", v);
+    }
+
+    #[test]
+    fn test_pop_days() {
+        let mut pdays: [u32; 7] = Default::default();
+
+        pdays = get_day_uint(DayE::Monday, pdays);
+        assert_eq!(pdays[0], 1);
+        pdays = get_day_uint(DayE::Monday, pdays);
+        assert_eq!(pdays[0], 2);
+        pdays = get_day_uint(DayE::Sunday, pdays);
+        assert_eq!(pdays[6], 1);
+    }
+
+    #[test]
+    fn test_find_pop_days() {
+        let mut scheduler = Scheduler::new(setup());
+        scheduler.find_most_popular_day();
+        println!("popular days: {:?}", scheduler.most_popular_days);
     }
 }
