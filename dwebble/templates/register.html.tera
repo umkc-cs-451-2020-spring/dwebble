@@ -1,0 +1,73 @@
+{% extends "base" %}
+
+{% block content %}
+    {% if flash %}
+        <p><strong>{{ flash }}</strong></p>
+    {% endif %}
+    <div class="content-wrapper">
+        <div class="content">
+            <div class="pure-g">
+                <div class="l-box-lrg pure-u-1 pure-u-md-2-5">
+                <h1>register account</h1>
+                <form class="pure-form pure-form-stacked" action="/register" method="post">
+                    <fieldset>
+                        <input name="csrf_token" type="hidden" style="display: !important;" value="{{csrf_token}}"/>
+                        <p>
+                            <label for="f_name">first name</label><br/>
+                            <input name="f_name" id="f_name" size="32" type="text" value=""/>
+                            {%- if error -%}
+                                <span style="color: red;">
+                                    Must enter a first name. Choose anything if you don't want
+                                    to give a real one!
+                                </span>
+                            {%- endif -%}
+                        </p>
+                        <p>
+                            <label for="l_name">last name</label><br/>
+                            <input name="l_name" id="l_name" size="32" type="text" value=""/>
+                        </p>
+                        <label for="username">username</label><br/>
+                        <input name="username" id="username" size="32" type="text" value=""/>
+                        {%- if error -%}
+                            <span style="color: red;">
+                                Valid usernames may only contain alphanumeric, '-', and '_' characters and be of length 3 to 10
+                                characters long.  usernames must not already be used.
+                            </span>
+                        {%- endif -%}
+                        <p>
+                            <label for="email">university email</label><br/>
+                            <input name="email" id="email" size="32" type="text" value=""/>
+                            {%- if error -%}
+                                <span style="color: red;">
+                                    Must be valid university email and not already used in system.
+                                </span>
+                            {%- endif -%}
+                        </p>        
+                        <p>
+                            <label for="password">password</label><br/>
+                            <input name="password" id="password" size="32" type="password" value=""/>
+                            {%- if error -%}
+                                <span style="color: red;">
+                                    Valid passwords are of a minimum length of 12 and a maximum length of 64 characters long.
+                                </span>
+                            {%- endif -%}
+                        </p>
+                        <p>
+                            <label for="confirm_password">confirm password</label><br/>
+                            <input name="confirm_password" id="confirm_password" size="32" type="password" value=""/>
+                            {%- if error -%}
+                                <span style="color: red;">
+                                    Passwords must match.
+                                </span>
+                            {%- endif -%}
+                        </p>        
+                        <p>
+                            <button class="pure-button name="submit" type="submit" id="submit">Submit</button>
+                        </p>
+                    </fieldset>
+                </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

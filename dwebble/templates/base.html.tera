@@ -1,17 +1,39 @@
-<html>
+<!doctype html>
+<html lang="eng">
     <head>
+        <link rel="stylesheet"
+              href="https://cdnjs.cloudflare.com/ajax/libs/pure/2.0.0/pure-min.css">
+        <!-- crossorigin="anonymous"> -->
+        <!-- href="https://unpkg.com/purecss@2.0.0/build/pure-min.css" -->
+        <!-- integrity="sha384-HSxN7qtqP6lfq2oc5NCUV4HQn8m8lj3ZDnEMehCzcgXN9rM8fsh0o6WRs1aKqPYC"        <!--  --> -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="dwebble: a class scheduler application">
         {% if title %}
             <title>{{ title }} - Dwebble</title>
         {% else %}
             <title>Dwebble Class Scheduler</title>
         {% endif %}
+        <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.0/build/grids-responsive-min.css">
+        <link href="static/style.css" type="text/css" rel="stylesheet"/>
     </head>
     <body>
-        <div>Dwebble:
-            <a href="/">Home</a>
-            <a href="/login">Login</a>
+        <div class="header">
+            <div class="home-menu pure-menu pure-menu-horizontal pure-menu-fixed">
+                <a class="pure-menu-heading" href="/">Dwebble</a>
+                <ul class="pure-menu-list">
+                    <li class="pure-menu-item pure-menu-selected">
+                        <a class="pure-menu-link" href="/">Home</a>
+                    </li>
+                    <li class="pure-menu-item pure-menu-selected">
+                        <a class="pure-menu-link" href="/login">Login</a>
+                    </li>
+                    <li class="pure-menu-item pure-menu-selected">
+                        <a class="pure-menu-link" href="/register">Register</a>
+                    </li>
+                </ul>
+            </div>
         </div>
-        <hr>
         {% block content %}
         {% endblock content %}
     </body>
