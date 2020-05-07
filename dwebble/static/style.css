@@ -40,7 +40,7 @@ label {
 .l-box-lrg {
     padding: 2em;
     border-bottom: 1px solid rgba(0,0,0,0.1);
-}
+}n
 
 .is-center {
     text-align: center;
@@ -58,12 +58,20 @@ label {
     font-size: 100%;
 }
 
+.pure-form select {
+    height: 2.5em;
+}
+
 .pure-form input[type] {
     border: 2px solid #ddd;
     box-shadow: none;
     font-size: 100%;
     width: 100%;
     margin-bottom: 1em;
+}
+
+.pure-form input[type="checkbox"] {
+    width: 0;
 }
 
 /*
@@ -188,7 +196,6 @@ a.pure-button-primary {
     /* These styles are required for the "scroll-over" effect */
     position: absolute;
     top: 5%;
-    left: 5%;
     width: 100%;
     min-height: 12%;
     z-index: 2;
@@ -199,7 +206,13 @@ a.pure-button-primary {
 /* We want to give the content area some more padding */
 .content {
     padding: 1em 1em 3em;
+    left: 5%;    
 }
+
+h1.content-head {
+    font-weight: bold;
+}
+    
 
 /* This is the class used for the main content headers (<h2>) */
 .content-head {
@@ -283,7 +296,7 @@ a.pure-button-primary {
         border: none;
     }
 
-    .content-wrapper {
+    .content {
         top: 10%;
         left: 5%;
     }
