@@ -5,7 +5,9 @@
 #[macro_use] extern crate diesel;
 #[macro_use] extern crate validator_derive;
 #[macro_use] extern crate lazy_static;
+#[macro_use] extern crate diesel_derive_enum;
 
+extern crate crypto;
 extern crate validator;
 
 use csrf::{AesGcmCsrfProtection, CsrfCookie, CsrfProtection, CsrfToken};
@@ -35,6 +37,7 @@ use std::sync::RwLock;
 pub mod models;
 pub mod scheduler;
 pub mod schema;
+pub mod util;
 
 #[database("dwebble_dev")]
 struct DevDbConn(diesel::PgConnection);
@@ -46,19 +49,32 @@ struct CsrfSecret(String);
 
 lazy_static! {
     static ref VALID_USERNAME_REGEX: Regex =
-        Regex::new(r"^[[:word:]-]{3,10}").expect("Failed to build user name regex! Wth!?");
+        Regex::new(r"^[[:word:]-]{3,12}").expect("Failed to build user name regex! Wth!?");
 }
 
 struct AppConfig {
     aes_generator: AesGcmCsrfProtection,
     csrf_tokens: HashMap<CsrfCookie, CsrfToken>,
+    auth_tokens: HashMap<String, String>,
 }
 
 type DwebbleConfig = RwLock<AppConfig>;
 
-#[derive(FromForm)]
-struct LoginForm {
-    input: String,
+#[derive(Validate, FromForm)]
+pub struct LoginForm {
+    #[validate(regex(
+        path = "VALID_USERNAME_REGEX",
+        message = "Invalid username. A-Za-z0-9, '-', and '_' characters and of 3 to 12 characters long."
+    ))]
+    username: String,
+    #[validate(length(
+        min = 12,
+        max = 64,
+        message = "Invalid password. Minimum length of 12, maximum of 64."
+    ))]
+    password: String,
+    csrf_token: String,
+    remember_me: bool,
 }
 
 #[derive(Serialize)]
@@ -75,6 +91,12 @@ struct RegisterContext {
     error: bool,
 }
 
+#[derive(Serialize)]
+struct NewScheduleContext {
+    flash: String,
+    error: bool,
+}
+
 #[derive(Validate, FromForm)]
 pub struct RegisterForm {
     #[validate(length(min = 2))]
@@ -83,11 +105,13 @@ pub struct RegisterForm {
     l_name: String,
     #[validate(regex(
         path = "VALID_USERNAME_REGEX",
-        message = "Invalid username. A-Za-z0-9, '-', and '_' characters and of 3 to 10 characters long."
+        message = "Invalid username. A-Za-z0-9, '-', and '_' characters and of 3 to 12 characters long."
     ))]
     username: String,
-    // DOB: String,
-    #[validate(email)]
+    #[validate(
+        email(message = "Invalid email."),
+        contains(pattern = "@mail.umkc.edu", message = "Must use a UMKC email address.")
+    )]
     email: String,
     #[validate(length(
         min = 12,
@@ -176,9 +200,69 @@ fn login(
 fn login_submit(
     state: State<DwebbleConfig>,
     login: LenientForm<LoginForm>,
+    dbctx: DevDbConn,
     mut cookies: Cookies,
 ) -> Result<Flash<Redirect>, Flash<Redirect>> {
-    unimplemented!()
+    let mut cfg = state.write().expect("Cannot read, config locked by Writer");
+
+    // TODO: this match logic/block can and should probably be broken down because it's a bit
+    // much.
+    match cookies.get_private(CSRF_COOKIE_ID) {
+        Some(c) => {
+            // TODO handle .expects()'s correctly.
+            let decoded_token = BASE64
+                .decode(login.csrf_token.as_bytes())
+                .expect("csrf token not base64");
+            let decoded_cookie = BASE64
+                .decode(c.value().as_bytes())
+                .expect("csrf cookie not base64");
+
+            let parsed_token = cfg
+                .aes_generator
+                .parse_token(&decoded_token)
+                .expect("token could not be parsed");
+
+            let parsed_cookie = cfg
+                .aes_generator
+                .parse_cookie(&decoded_cookie)
+                .expect("cookie could not be parsed");
+
+            // TODO use cfg.csrf_auth_tokens.get(&decoded_cookie) to make egregious
+            // check that token-pair wasn't spoofed or something, idk? seems unnecessary afterall?
+            if cfg
+                .aes_generator
+                .verify_token_pair(&parsed_token, &parsed_cookie)
+            {
+                match login.validate() {
+                    Ok(_) => match models::login_user(&dbctx, &login) {
+                        Ok(login_auth) => {
+                            cookies.add_private(Cookie::new(
+                                SESSION_COOKIE_ID,
+                                String::from(&login_auth.session),
+                            ));
+                            cfg.auth_tokens
+                                .insert(login_auth.session, String::from(&login_auth.username));
+                            Ok(Flash::success(
+                                Redirect::to(uri!(login)),
+                                format!("Successfully logged in, {}", login_auth.username),
+                            ))
+                        }
+                        Err(_) => Err(Flash::error(
+                            Redirect::to(uri!(login)),
+                            "Login failed: Invalid username or password.",
+                        )),
+                    },
+                    Err(_) => Err(Flash::error(
+                        Redirect::to(uri!(login)),
+                        "Login failed: Invalid username or password.",
+                    )),
+                }
+            } else {
+                panic!("Cookie and Token do not match, get out")
+            }
+        }
+        None => panic!("No Csrf Cookie found in headers"),
+    }
 }
 
 #[get("/register")]
@@ -187,6 +271,7 @@ fn register(
     mut cookies: Cookies,
     state: State<DwebbleConfig>,
 ) -> Template {
+    println!("Made it GET register");
     let mut cfg = state
         .write()
         .expect("Cannot write, config locked by Readers");
@@ -209,6 +294,83 @@ fn register(
             csrf_token: token_str,
             flash: s,
             error: err,
+        },
+    )
+}
+
+#[post("/register", data = "<register>")]
+fn register_submit(
+    state: State<DwebbleConfig>,
+    register: LenientForm<RegisterForm>,
+    dbcx: DevDbConn,
+    mut cookies: Cookies,
+) -> Result<Flash<Redirect>, Flash<Redirect>> {
+    println!("Made it to submit");
+    let mut cfg = state.read().expect("Cannot read, config locked by Writer");
+
+    // TODO: this match logic/block can and should probably be broken down because it's a bit
+    // much.
+    match cookies.get_private(CSRF_COOKIE_ID) {
+        Some(c) => {
+            // TODO handle .expects()'s correctly.
+            let decoded_token = BASE64
+                .decode(register.csrf_token.as_bytes())
+                .expect("csrf token not base64");
+            let decoded_cookie = BASE64
+                .decode(c.value().as_bytes())
+                .expect("csrf cookie not base64");
+
+            let parsed_token = cfg
+                .aes_generator
+                .parse_token(&decoded_token)
+                .expect("token could not be parsed");
+
+            let parsed_cookie = cfg
+                .aes_generator
+                .parse_cookie(&decoded_cookie)
+                .expect("cookie could not be parsed");
+
+            // TODO use cfg.csrf_auth_tokens.get(&decoded_cookie) to make egregious
+            // check that token-pair wasn't spoofed or something, idk? seems unnecessary afterall?
+            if cfg
+                .aes_generator
+                .verify_token_pair(&parsed_token, &parsed_cookie)
+            {
+                match register.validate() {
+                    Ok(_) => {
+                        println!("Made it to the transaction");
+                        let reg_user_trans = models::register_user(&dbcx, &register);
+                        match reg_user_trans {
+                            Ok(_) => Ok(Flash::success(
+                                Redirect::to(uri!(login)),
+                                "You have successfully registered an account. You may now login.",
+                            )),
+                            Err(e) => Err(Flash::error(Redirect::to(uri!(register)), e)),
+                        }
+                    }
+                    Err(v) => Err(Flash::error(
+                        Redirect::to(uri!(register)),
+                        format!(
+                            "Registeration failed. Errors: {:?}",
+                            v.into_errors().values()
+                        ),
+                    )),
+                }
+            } else {
+                panic!("Cookie and Token do not match, get out")
+            }
+        }
+        None => panic!("No Csrf Cookie found in headers"),
+    }
+}
+
+#[get("/new_schedule")]
+fn new_schedule() -> Template {
+    Template::render(
+        "new_schedule",
+        &NewScheduleContext {
+            flash: "".to_string(),
+            error: false,
         },
     )
 }
@@ -264,16 +426,26 @@ fn make_url_for(urls: BTreeMap<String, String>) -> GlobalFn {
 /// the mounting route given to it.
 fn main() {
     // routes! is a macro that will collect and return every handle name given to it.
-    let app_routes = routes![index, submit, login, login_submit, register, get_schedules];
+    let app_routes = routes![
+        index,
+        submit,
+        login,
+        login_submit,
+        register,
+        register_submit,
+        new_schedule,
+    ];
 
     rocket::ignite()
         .attach(Template::fairing())
         .attach(AdHoc::on_attach("CSRF Secret Key", |rocket| {
-            let csrf_secret = rocket
-                .config()
-                .get_str("csrf_secret_key")
-                .unwrap_or("You-dont-have-a-csrf-secret-configured!")
-                .to_string();
+            let csrf_secret = rocket.config().get_str("csrf_secret_key").map_or_else(
+                |_| {
+                    println!("You-dont-have-a-csrf-secret-configured!");
+                    "You-dont-have-a-csrf-secret-configured!".to_string()
+                },
+                |k| k.to_string(),
+            );
             Ok(rocket.manage(CsrfSecret(csrf_secret)))
         }))
         .attach(AdHoc::on_attach("AppConfig", |rocket| {
@@ -285,6 +457,7 @@ fn main() {
                     arr_secret.copy_from_slice(&secret.0.as_bytes()[0..32]);
                     Ok(rocket.manage(RwLock::new(AppConfig {
                         aes_generator: AesGcmCsrfProtection::from_key(arr_secret),
+                        auth_tokens: HashMap::new(),
                         csrf_tokens: HashMap::new(),
                     })))
                 }

@@ -8,11 +8,12 @@ log = "normal"
 # this should actually be secret and not committed anywhere and possibly kept exclusively to an env variable. do not use the value
 # included in this example config in actual prod code!
 # ------------
-# secret_key = ""
+# To generate a secret key for Rocket, run `openssl rand -base64 32`
+secret_key = "XhPjRRP7o3kp2J6XAi+3ihRFlFmIzIzUFvQl/3TBNjA="
 # a separate key is required for csrf generation because the explicit value of secret_key is not available to a rocket application
 # at run time; however, all other toml values are, ergo csrf_secret_key.
 # Similar to secret_key, DO NOT COMMIT this in publicly available code!
-# csrf_secret_key = ""
+csrf_secret_key = "YrUOnVLjzeiiWOcWMj51Ivb3GmmCGXO4y2qoysjGXP4="
 limits = { forms = 32768 }
 
 
